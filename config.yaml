@@ -1,0 +1,899 @@
+# Meta配置模板：https://github.com/MetaCubeX/mihomo/blob/Alpha/docs/config.yaml
+# 接管：部分参数不支持在此页面直接修改，请到覆写设置页面进行修改
+# ========================
+# 主要端口设置
+# ========================
+port: 7890
+socks-port: 7891
+redir-port: 7892
+mixed-port: 7893
+tproxy-port: 7895
+
+allow-lan: true
+mode: rule
+
+
+# 统一测速延迟计算
+unified-delay: true
+
+# 多 IP 并发连接，优先使用最先成功的 IP
+tcp-concurrent: true
+
+profile:
+  # 保存策略组选择结果
+  store-selected: true
+
+  # 保存 fake-ip 映射
+  store-fake-ip: true
+
+
+# ============================================================
+# DNS
+# ============================================================
+
+dns:
+  enable: true
+
+  # ARC 缓存算法
+  cache-algorithm: arc
+
+  # 当前家庭网络不使用 IPv6
+  ipv6: false
+
+  # Fake-IP
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+
+  # OpenClash DNS Hijack 端口
+  listen: 0.0.0.0:7874
+  # 配置后面的nameserver、fallback和nameserver-policy向dns服务器的连接过程是否遵守遵守rules规则
+  # 如果为false（默认值）则这三部分的dns服务器在未特别指定的情况下会直连
+  # 如果为true，将会按照rules的规则匹配链接方式（走代理或直连），如果有特别指定则任然以指定值为准
+  # 仅当proxy-server-nameserver非空时可以开启此选项, 强烈不建议和prefer-h3一起使用
+  # 此外，这三者配置中的dns服务器如果出现域名会采用default-nameserver配置项解析，也请确保正确配置default-nameserver
+  respect-rules: true
+  # 配置fake-ip-filter的匹配模式，默认为blacklist，即如果匹配成功不返回fake-ip
+  # 可设置为whitelist，即只有匹配成功才返回fake-ip
+  # 也可配置为rule，规则模式语法见fake-ip-filter说明
+  fake-ip-filter-mode: blacklist
+  # 配置不使用 fake-ip 的域名
+  fake-ip-filter:
+    # 本地域名不要 Fake-IP
+    - "*.lan"
+    - "*.local"
+    # fakeip-filter 为 rule-providers 中的名为 fakeip-filter 规则订阅，
+    # 且 behavior 必须为 domain/classical，当为 classical 时仅会生效域名类规则
+    - rule-set:fakeip-filter
+  
+  # DNS 主要域名配置
+  # 支持 UDP，TCP，DoT，DoH，DoQ
+  # 这部分为主要 DNS 配置，影响所有直连，确保使用对大陆解析精准的 DNS
+  nameserver:
+    - https://1.1.1.1/dns-query
+    - https://8.8.8.8/dns-query
+  use-hosts: true
+
+  # 用于解析 nameserver，fallback 以及其他 DNS 服务器配置的，DNS 服务域名
+  # 只能使用纯 IP 地址，可使用加密 DNS
+  default-nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+
+  # ==========================================================
+  # DNS 分流
+  #
+  # nameserver-policy 优先级高于 nameserver/fallback
+  # ==========================================================
+
+  nameserver-policy:
+    # 中国大陆 / Private / Apple
+    "geosite:cn,private,apple":
+      - 218.85.152.99
+      - 218.85.157.99
+    "geosite:category-ads-all": rcode://success # DNS 层面的广告域名拦截
+    # "www.baidu.com,+.google.cn": [223.5.5.5, https://dns.alidns.com/dns-query]
+    ## global，dns 为 rule-providers 中的名为 global 和 dns 规则订阅，
+    ## 且 behavior 必须为 domain/classical，当为 classical 时仅会生效域名类规则
+    # "rule-set:global,dns": 8.8.8.8
+  
+  # 专用于节点域名解析的 DNS 服务器，非必要配置项，如果不填则遵循nameserver-policy、nameserver和fallback的配置
+  proxy-server-nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+
+
+
+# 机场节点订阅
+
+proxy-providers:
+
+  airport:
+    # 实际地址由 OpenClash Overwrite 注入
+    url: "机场地址"
+
+    type: http
+
+    # 订阅每天更新一次
+    interval: 86400
+
+    # 订阅本身通过直连更新
+    proxy: 直连
+
+    health-check:
+      enable: true
+
+      url: https://www.gstatic.com/generate_204
+
+      # 5 分钟检查一次
+      interval: 300
+
+      # 5 秒超时
+      timeout: 5000
+
+      # 当前未使用的 Provider 不主动测速
+      lazy: true
+
+      # gstatic 204 检测
+      expected-status: 204
+
+
+# ============================================================
+# 基础代理
+# ============================================================
+
+proxies:
+
+  - {name: 直连, type: direct}
+
+  - {name: 拒绝, type: reject}
+
+
+# ============================================================
+# 默认业务策略组模板
+#
+# 业务组不直接绑定具体节点，而是绑定：
+# 地区组 / 机场组 / 全部节点
+#
+# 这样节点变化后无需修改业务组。
+# ============================================================
+
+default: &default
+  type: select
+  proxies:
+    - 自动选择
+    - 全部节点
+    - 香港
+    - 香港自动
+    - 日本
+    - 日本自动
+    - 新加坡
+    - 新加坡自动
+    - 美国
+    - 美国自动
+    - 台湾
+    - 台湾自动
+    - 其他地区
+    - 直连
+
+
+# ============================================================
+# 业务策略组
+# ============================================================
+
+proxy-groups:
+
+  # ----------------------------------------------------------
+  # AI
+  # ----------------------------------------------------------
+
+  - {name: 人工智能, <<: *default}
+
+  # ----------------------------------------------------------
+  # YouTube
+  # ----------------------------------------------------------
+
+  - {name: YouTube, <<: *default}
+
+  # ----------------------------------------------------------
+  # 影视刮削
+  # ----------------------------------------------------------
+
+  - {name: 影视刮削, <<: *default}
+
+  # ----------------------------------------------------------
+  # 流媒体
+  # ----------------------------------------------------------
+
+  - {name: 流媒体, <<: *default}
+
+  # ----------------------------------------------------------
+  # Google
+  # ----------------------------------------------------------
+
+  - {name: 谷歌, <<: *default}
+
+  # ----------------------------------------------------------
+  # Microsoft
+  # ----------------------------------------------------------
+
+  - {name: 微软, <<: *default}
+
+  # ----------------------------------------------------------
+  # Apple
+  #
+  # 保留直连作为第一选择。
+  # 需要测试代理时可以手动选择“国外”。
+  # ----------------------------------------------------------
+
+  - name: 苹果
+    type: select
+    proxies:
+      - 直连
+      - 国外
+
+  # ----------------------------------------------------------
+  # NVIDIA
+  # ----------------------------------------------------------
+
+  - {name: 英伟达, <<: *default}
+
+  # ----------------------------------------------------------
+  # 游戏
+  # ----------------------------------------------------------
+
+  - {name: 游戏, <<: *default}
+
+  # ----------------------------------------------------------
+  # 加密货币
+  # ----------------------------------------------------------
+
+  - {name: 加密货币, <<: *default}
+
+  # ----------------------------------------------------------
+  # 成人内容
+  # ----------------------------------------------------------
+
+  - {name: 颜色, <<: *default}
+
+  # ----------------------------------------------------------
+  # 网络测试
+  # ----------------------------------------------------------
+
+  - {name: 测试, <<: *default}
+
+  # ----------------------------------------------------------
+  # 国外
+  # ----------------------------------------------------------
+
+  - {name: 国外, <<: *default}
+
+  # ----------------------------------------------------------
+  # 国内
+  #
+  # 默认直连。
+  # ----------------------------------------------------------
+
+  - name: 国内
+    type: select
+    proxies:
+      - 直连
+      - 国外
+
+  # ----------------------------------------------------------
+  # 最终兜底
+  # ----------------------------------------------------------
+
+  - {name: 漏网之鱼, <<: *default}
+
+
+  # ==========================================================
+  # 机场级策略组
+  # ==========================================================
+
+
+  # ==========================
+  # 基础节点
+  # ==========================
+
+  - name: 全部节点
+    type: select
+    include-all-providers: true
+
+  - name: 自动选择
+    type: url-test
+    include-all-providers: true
+    url: https://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 30
+
+  # ==========================
+  # 地区
+  # ==========================
+
+  - name: 香港
+    type: select
+    include-all-providers: true
+    filter: "(?i)港|hk|hong ?kong"
+
+  - name: 香港自动
+    type: url-test
+    include-all-providers: true
+    filter: "(?i)港|hk|hong ?kong"
+    url: https://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 30
+
+  - name: 日本
+    type: select
+    include-all-providers: true
+    filter: "(?i)日|jp|japan"
+
+  - name: 日本自动
+    type: url-test
+    include-all-providers: true
+    filter: "(?i)日|jp|japan"
+    url: https://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 30
+
+  - name: 新加坡
+    type: select
+    include-all-providers: true
+    filter: "(?i)新|sg|singapore"
+
+  - name: 新加坡自动
+    type: url-test
+    include-all-providers: true
+    filter: "(?i)新|sg|singapore"
+    url: https://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 30
+
+  - name: 美国
+    type: select
+    include-all-providers: true
+    filter: "(?i)美|us|united ?states"
+
+  - name: 美国自动
+    type: url-test
+    include-all-providers: true
+    filter: "(?i)美|us|united ?states"
+    url: https://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 30
+
+  - name: 台湾
+    type: select
+    include-all-providers: true
+    filter: "(?i)台|tw|taiwan"
+
+  - name: 台湾自动
+    type: url-test
+    include-all-providers: true
+    filter: "(?i)台|tw|taiwan"
+    url: https://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 30
+
+  - name: 其他地区
+    type: select
+    include-all-providers: true
+    exclude-filter: "(?i)港|hk|hong ?kong|台|tw|taiwan|日|jp|japan|新|sg|singapore|美|us|united ?states"
+
+
+# ============================================================
+# Rules
+# ============================================================
+
+rules:
+
+  # ==========================================================
+  # 1. 广告 / 拒绝
+  # ==========================================================
+
+  - RULE-SET,Loyalsoldier / Reject,REJECT
+
+
+  # ==========================================================
+  # 2. LAN / 本地
+  # ==========================================================
+
+  - GEOIP,LAN,DIRECT,no-resolve
+
+  # Tailnet
+  - IP-CIDR,100.64.0.0/10,DIRECT,no-resolve
+
+
+  # ==========================================================
+  # 3. Apple 基础设施
+  # ==========================================================
+
+  - DOMAIN,time.apple.com,DIRECT
+  - DOMAIN,time.asia.apple.com,DIRECT
+  - DOMAIN,push.apple.com,DIRECT
+  - DOMAIN,courier.push.apple.com,DIRECT
+  - DOMAIN,pushex.apple.com,DIRECT
+
+
+  # ==========================================================
+  # 4. Tailscale
+  # ==========================================================
+
+  # DERP
+  - DOMAIN-KEYWORD,derp,香港自动
+
+  # Tailscale 官方服务
+  - DOMAIN-SUFFIX,tailscale.com,DIRECT
+  - DOMAIN-SUFFIX,ts.net,DIRECT
+
+  # Tailscale 控制面直连
+  - DOMAIN,login.tailscale.com,DIRECT
+  - DOMAIN,controlplane.tailscale.com,DIRECT
+
+
+  # ==========================================================
+  # 5. 网络检测
+  # ==========================================================
+
+  - RULE-SET,Test / Domain,测试
+
+
+  # ==========================================================
+  # 6. Media Scraper
+  # ==========================================================
+
+  # TMDB
+  - DOMAIN,api.themoviedb.org,影视刮削
+  - DOMAIN,api.tmdb.org,影视刮削
+  - DOMAIN,image.tmdb.org,影视刮削
+  - DOMAIN-SUFFIX,themoviedb.org,影视刮削
+  - DOMAIN-SUFFIX,tmdb.org,影视刮削
+  - DOMAIN-SUFFIX,tmdb.com,影视刮削
+
+  # TVDB
+  - DOMAIN,api.thetvdb.com,影视刮削
+  - DOMAIN-SUFFIX,thetvdb.com,影视刮削
+  - DOMAIN-SUFFIX,tvdb.com,影视刮削
+  - DOMAIN-SUFFIX,tvdb.org,影视刮削
+
+  # Fanart
+  - DOMAIN,webservice.fanart.tv,影视刮削
+  - DOMAIN-SUFFIX,fanart.tv,影视刮削
+  - DOMAIN-SUFFIX,assets.fanart.tv,影视刮削
+
+  # IMDb
+  - DOMAIN-SUFFIX,imdb.com,影视刮削
+  - DOMAIN-SUFFIX,imdb-api.com,影视刮削
+  - DOMAIN-SUFFIX,media-amazon.com,影视刮削
+
+  # Trakt
+  - DOMAIN-SUFFIX,trakt.tv,影视刮削
+  - DOMAIN,api.trakt.tv,影视刮削
+
+  # OMDb
+  - DOMAIN-SUFFIX,omdbapi.com,影视刮削
+
+  # OpenSubtitles
+  - DOMAIN-SUFFIX,opensubtitles.org,影视刮削
+  - DOMAIN-SUFFIX,opensubtitles.com,影视刮削
+  - DOMAIN,api.opensubtitles.com,影视刮削
+
+
+  # ==========================================================
+  # 7. Apple
+  # ==========================================================
+
+  # 中国大陆 Apple
+  - RULE-SET,Apple-CN / Domain,国内
+
+  # iCloud
+  - RULE-SET,Loyalsoldier / iCloud,苹果
+
+  # 自定义 Apple
+  - RULE-SET,Apple-Custome / Domain,苹果
+
+  # 全球 Apple
+  - RULE-SET,Apple / Domain,苹果
+
+
+  # ==========================================================
+  # 8. AI
+  # ==========================================================
+
+  - RULE-SET,AI / Domain,人工智能
+
+
+  # ==========================================================
+  # 9. Google
+  # ==========================================================
+
+  - RULE-SET,Google / Domain,谷歌
+  - RULE-SET,Google / IP,谷歌
+
+
+  # ==========================================================
+  # 10. Microsoft
+  # ==========================================================
+
+  - RULE-SET,Microsoft / Domain,微软
+
+
+  # ==========================================================
+  # 11. YouTube
+  # ==========================================================
+
+  - RULE-SET,YouTube / Domain,YouTube
+
+
+  # ==========================================================
+  # 12. Streaming
+  # ==========================================================
+
+  - RULE-SET,TikTok / Domain,流媒体
+
+  - RULE-SET,Netflix / Domain,流媒体
+  - RULE-SET,Netflix / IP,流媒体,no-resolve
+
+  - RULE-SET,Disney / Domain,流媒体
+  - RULE-SET,Amazon / Domain,流媒体
+  - RULE-SET,HBO / Domain,流媒体
+  - RULE-SET,Spotify / Domain,流媒体
+
+
+  # ==========================================================
+  # 13. Games
+  # ==========================================================
+
+  - RULE-SET,Steam / Domain,游戏
+  - RULE-SET,Epic / Domain,游戏
+  - RULE-SET,EA / Domain,游戏
+  - RULE-SET,Blizzard / Domain,游戏
+  - RULE-SET,UBI / Domain,游戏
+  - RULE-SET,PlayStation / Domain,游戏
+  - RULE-SET,Nintend / Domain,游戏
+
+
+  # ==========================================================
+  # 14. Other Services
+  # ==========================================================
+
+  # Telegram
+  - RULE-SET,Telegram / Domain,国外
+  - RULE-SET,Telegram / IP,国外,no-resolve
+
+  # NVIDIA
+  - RULE-SET,Nvidia / Domain,英伟达
+
+  # Crypto
+  - RULE-SET,Crypto / Domain,加密货币
+  - RULE-SET,OKX / Domain,加密货币
+  - RULE-SET,Bybit / Domain,加密货币
+  - RULE-SET,Binance / Domain,加密货币
+
+  # GitHub
+  - RULE-SET,GitHub / Domain,国外
+
+  # 成人内容
+  - RULE-SET,Sex / Domain,颜色
+
+
+  # ==========================================================
+  # 15. Private
+  # ==========================================================
+
+  - RULE-SET,Private / Domain,国内
+
+
+  # ==========================================================
+  # 16. 用户自定义规则
+  #
+  # Direct / Proxy 是你的人工覆盖层。
+  # ==========================================================
+
+  - RULE-SET,Direct / Domain,国内
+  - RULE-SET,Proxy / Domain,国外
+
+
+  # ==========================================================
+  # 17. 中国大陆 / 海外
+  # ==========================================================
+
+  # 中国域名
+  - RULE-SET,China / Domain,国内
+
+  # 海外域名
+  - RULE-SET,GeoLocation / Domain,国外
+
+  # 中国 IP
+  - RULE-SET,China / IP,国内,no-resolve
+
+  # GEOIP CN 兜底
+  - GEOIP,CN,国内,no-resolve
+
+
+  # ==========================================================
+  # 18. 最终兜底
+  # ==========================================================
+
+  - MATCH,漏网之鱼
+
+
+# ============================================================
+# Rule Provider Anchor
+# ========================
+#
+# domain → MRS 域名规则
+# ip     → MRS IP-CIDR 规则
+# class  → Classical 文本规则
+#
+# 所有 Provider 默认 24 小时更新一次。
+# ========================
+
+rule-anchor:
+
+  ip: &ip {type: http, interval: 86400, behavior: ipcidr, format: mrs}
+  domain: &domain {type: http, interval: 86400, behavior: domain, format: mrs}
+  class: &class {type: http, interval: 86400, behavior: classical, format: text}
+
+
+# ============================================================
+# Rule Providers
+# ============================================================
+
+rule-providers:
+
+  # ==========================================================
+  # Fake-IP
+  # ==========================================================
+
+  fakeip-filter:
+    <<: *domain
+    path: ./rule_provider/fakeip-filter.mrs
+    url: "https://github.com/DustinWin/ruleset_geodata/raw/mihomo-ruleset/fakeip-filter.mrs"
+
+
+  # ============================================================
+  # 广告拦截
+  # ============================================================
+
+  # Loyalsoldier 广告域名
+  # 官方 release/reject.txt 为 domain 类型规则。
+  Loyalsoldier / Reject:
+    <<: *domain
+    url: "https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/reject.txt"
+
+
+  # ==========================================================
+  # AI
+  # ==========================================================
+
+  AI / Domain:
+    <<: *domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-ai-!cn.mrs"
+
+
+  # ==========================================================
+  # Network Test
+  # ==========================================================
+
+  Test / Domain:
+    <<: *class
+    url: "https://raw.githubusercontent.com/liandu2024/clash/refs/heads/main/list/Check.list"
+
+
+  # ==========================================================
+  # GitHub / Microsoft
+  # ==========================================================
+
+  GitHub / Domain:
+    <<: *domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/github.mrs"
+
+  Microsoft / Domain:
+    <<: *domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/microsoft.mrs"
+
+
+  # ==========================================================
+  # Apple
+  # ==========================================================
+
+  Apple / Domain:
+    <<: *domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/apple.mrs"
+
+  Apple-CN / Domain:
+    <<: *domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/apple-cn.mrs"
+
+  Apple-Custome / Domain:
+    <<: *class
+    url: "https://raw.githubusercontent.com/liandu2024/clash/refs/heads/main/list/Apple.list"
+
+  Loyalsoldier / iCloud:
+    <<: *domain
+    url: "https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/icloud.txt"
+
+
+  # ==========================================================
+  # Google
+  # ==========================================================
+
+  Google / Domain:
+    <<: *domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/google.mrs"
+
+  Google / IP:
+    <<: *ip
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/google.mrs"
+
+
+  # ==========================================================
+  # YouTube
+  # ==========================================================
+
+  YouTube / Domain:
+    <<: *domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/youtube.mrs"
+
+
+  # ==========================================================
+  # Streaming
+  # ==========================================================
+
+  TikTok / Domain:
+    <<: *domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/tiktok.mrs"
+
+  Netflix / Domain:
+    <<: *domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/netflix.mrs"
+
+  Netflix / IP:
+    <<: *ip
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/netflix.mrs"
+
+  Disney / Domain:
+    <<: *domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/disney.mrs"
+
+  Amazon / Domain:
+    <<: *domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/amazon.mrs"
+
+  HBO / Domain:
+    <<: *domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/hbo.mrs"
+
+  Spotify / Domain:
+    <<: *domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/spotify.mrs"
+
+
+  # ==========================================================
+  # Games
+  # ==========================================================
+
+  Steam / Domain:
+    <<: *domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/steam.mrs"
+
+  Epic / Domain:
+    <<: *class
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Epic/Epic.list"
+
+  EA / Domain:
+    <<: *class
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/EA/EA.list"
+
+  Blizzard / Domain:
+    <<: *class
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Blizzard/Blizzard.list"
+
+  UBI / Domain:
+    <<: *class
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/UBI/UBI.list"
+
+  PlayStation / Domain:
+    <<: *class
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/PlayStation/PlayStation.list"
+
+  Nintend / Domain:
+    <<: *class
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Nintendo/Nintendo.list"
+
+
+  # ==========================================================
+  # Crypto
+  # ==========================================================
+
+  Crypto / Domain:
+    <<: *class
+    url: "https://gh-proxy.com/raw.githubusercontent.com/liandu2024/clash/refs/heads/main/list/Crypto.list"
+
+  OKX / Domain:
+    <<: *domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/okx.mrs"
+
+  Bybit / Domain:
+    <<: *domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/bybit.mrs"
+
+  Binance / Domain:
+    <<: *domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/binance.mrs"
+
+
+  # ==========================================================
+  # Telegram
+  # ==========================================================
+
+  Telegram / Domain:
+    <<: *domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/telegram.mrs"
+
+  Telegram / IP:
+    <<: *ip
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/telegram.mrs"
+
+
+  # ==========================================================
+  # NVIDIA
+  # ==========================================================
+
+  Nvidia / Domain:
+    <<: *class
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Nvidia/Nvidia.list"
+
+
+  # ==========================================================
+  # 用户自定义 Direct / Proxy
+  # ==========================================================
+
+  Direct / Domain:
+    <<: *class
+    url: "https://raw.githubusercontent.com/liandu2024/clash/refs/heads/main/list/Direct.list"
+
+  Proxy / Domain:
+    <<: *class
+    url: "https://raw.githubusercontent.com/liandu2024/clash/refs/heads/main/list/Proxy.list"
+
+
+  # ==========================================================
+  # MetaCubeX：非中国大陆
+  # ==========================================================
+
+  GeoLocation / Domain:
+    <<: *domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/geolocation-!cn.mrs"
+
+
+  # ==========================================================
+  # China
+  # ==========================================================
+
+  China / Domain:
+    <<: *domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/cn.mrs"
+
+  China / IP:
+    <<: *ip
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/cn.mrs"
+
+
+  # ==========================================================
+  # Private
+  # ==========================================================
+
+  Private / Domain:
+    <<: *domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/private.mrs"
+
+
+  # ==========================================================
+  # Adult
+  # ==========================================================
+
+  Sex / Domain:
+    <<: *class
+    url: "https://raw.githubusercontent.com/liandu2024/clash/refs/heads/main/list/Sex.list"
