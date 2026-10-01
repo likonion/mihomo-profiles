@@ -26,6 +26,12 @@ profile:
   # 保存 fake-ip 映射
   store-fake-ip: true
 
+ntp:
+  enable: true
+  server: ntp.aliyun.com
+  port: 123
+  interval: 30
+  write-to-system: true
 
 # ============================================================
 # DNS
