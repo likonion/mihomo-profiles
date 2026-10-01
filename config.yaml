@@ -486,12 +486,23 @@ rules:
   - RULE-SET,HBO / Domain,流媒体
   - RULE-SET,Spotify / Domain,流媒体
 
-
   # ==========================================================
-  # 13. Games
+  # 13. Games (海外游戏平台分流)
   # ==========================================================
 
-  - RULE-SET,Games / Domain,游戏
+  # Steam 下载 CDN 强制直连（必须放在 Steam 代理规则之前）
+  - DOMAIN-SUFFIX,steamcontent.com,DIRECT
+  - DOMAIN-SUFFIX,cm.steampowered.com,DIRECT
+  - DOMAIN-SUFFIX,steamstatic.com,DIRECT
+
+  # 游戏平台商店、社区与登录认证走代理
+  - RULE-SET,Steam / Domain,游戏
+  - RULE-SET,Epic / Domain,游戏
+  - RULE-SET,Nintendo / Domain,游戏
+  - RULE-SET,PlayStation / Domain,游戏
+  - RULE-SET,EA / Domain,游戏
+  - RULE-SET,Ubisoft / Domain,游戏
+
 
   # ==========================================================
   # 14. Other Services
@@ -713,9 +724,30 @@ rule-providers:
   # ==========================================================
   # Games
   # ==========================================================
-  Games / Domain:
+  # 仅针对常见海外游戏平台（商店/社区/登录，由 MetaCubeX 维护）
+  Steam / Domain:
     <<: *domain
-    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-games@cn.mrs"
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/steam.mrs"
+
+  Epic / Domain:
+    <<: *domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/epicgames.mrs"
+
+  Nintendo / Domain:
+    <<: *domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/nintendo.mrs"
+
+  PlayStation / Domain:
+    <<: *domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/playstation.mrs"
+
+  EA / Domain:
+    <<: *domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/ea.mrs"
+
+  Ubisoft / Domain:
+    <<: *domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/ubisoft.mrs"
 
   # ==========================================================
   # Crypto
