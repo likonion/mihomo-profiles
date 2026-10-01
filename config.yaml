@@ -365,17 +365,19 @@ rules:
   # 4. Tailscale
   # ==========================================================
 
-  # DERP
-  - DOMAIN-SUFFIX,derp.tailscale.com,香港自动
+  # 精确匹配官方 DERP 中继节点（如 derp1.tailscale.com, derp3e.tailscale.com 等）走代理
+  - DOMAIN-REGEX,^derp[a-z0-9-]*\.tailscale\.com$,香港自动
 
+  # 自建 DERP（如果你的自建 DERP 域名含有 derp，也可以加这条）
+  - DOMAIN-KEYWORD,derp,香港自动
 
-  # Tailscale 官方服务
-  - DOMAIN-SUFFIX,tailscale.com,DIRECT
-  - DOMAIN-SUFFIX,ts.net,DIRECT
-
-  # Tailscale 控制面直连
+  # 控制面与登录直连（避免代理 IP 频繁变动导致频繁重新认证）
   - DOMAIN,login.tailscale.com,DIRECT
   - DOMAIN,controlplane.tailscale.com,DIRECT
+
+  # Tailscale 官方其余 Web / API 服务直连
+  - DOMAIN-SUFFIX,tailscale.com,DIRECT
+  - DOMAIN-SUFFIX,ts.net,DIRECT
 
 
   # ==========================================================
