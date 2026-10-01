@@ -362,23 +362,18 @@ rules:
 
 
   # ==========================================================
-  # 4. Tailscale
+  # 4. Tailscale (规则集 + 关键差异化前置)
   # ==========================================================
 
-  # 精确匹配官方 DERP 中继节点（如 derp1.tailscale.com, derp3e.tailscale.com 等）走代理
+  # 官方海外 DERP 中继服务器：走代理节点转发
   - DOMAIN-REGEX,^derp[a-z0-9-]*\.tailscale\.com$,香港自动
 
-  # 自建 DERP（如果你的自建 DERP 域名含有 derp，也可以加这条）
-  - DOMAIN-KEYWORD,derp,香港自动
-
-  # 控制面与登录直连（避免代理 IP 频繁变动导致频繁重新认证）
+  # 控制面与认证接口：必须直连（避免节点切换导致设备频繁重新认证）
   - DOMAIN,login.tailscale.com,DIRECT
   - DOMAIN,controlplane.tailscale.com,DIRECT
 
-  # Tailscale 官方其余 Web / API 服务直连
-  - DOMAIN-SUFFIX,tailscale.com,DIRECT
-  - DOMAIN-SUFFIX,ts.net,DIRECT
-
+  # 其余所有 Tailscale 官方流量（Web/API 等）：使用现成规则集直连
+  - RULE-SET,Tailscale / Domain,DIRECT
 
   # ==========================================================
   # 5. 网络检测
@@ -840,3 +835,10 @@ rule-providers:
   Sex / Domain:
     <<: *class
     url: "https://raw.githubusercontent.com/liandu2024/clash/refs/heads/main/list/Sex.list"
+  # ==========================================================
+  # Tailscale
+  # ==========================================================
+
+  Tailscale / Domain:
+    <<: *domain
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/tailscale.mrs"
