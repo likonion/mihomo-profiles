@@ -439,9 +439,6 @@ rules:
   # iCloud
   - RULE-SET,iCloud / Domain,苹果
 
-  # 自定义 Apple
-  - RULE-SET,Apple-Custome / Domain,苹果
-
   # 全球 Apple
   - RULE-SET,Apple / Domain,苹果
 
@@ -655,10 +652,6 @@ rule-providers:
   Apple-CN / Domain:
     <<: *domain
     url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/apple-cn.mrs"
-
-  Apple-Custome / Domain:
-    <<: *class
-    url: "https://raw.githubusercontent.com/liandu2024/clash/refs/heads/main/list/Apple.list"
 
   iCloud / Domain:
     <<: *domain
