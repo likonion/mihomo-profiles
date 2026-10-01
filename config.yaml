@@ -337,7 +337,7 @@ rules:
   # 1. 广告 / 拒绝
   # ==========================================================
 
-  - RULE-SET,Loyalsoldier / Reject,REJECT
+  - RULE-SET,ads / Reject,REJECT
 
 
   # ==========================================================
@@ -434,7 +434,7 @@ rules:
   - RULE-SET,Apple-CN / Domain,国内
 
   # iCloud
-  - RULE-SET,Loyalsoldier / iCloud,苹果
+  - RULE-SET,iCloud / Domain,苹果
 
   # 自定义 Apple
   - RULE-SET,Apple-Custome / Domain,苹果
@@ -606,13 +606,9 @@ rule-providers:
   # ============================================================
   # 广告拦截
   # ============================================================
-
-  # Loyalsoldier 广告域名
-  # 官方 release/reject.txt 为 domain 类型规则。
-  Loyalsoldier / Reject:
+  ads / Reject:
     <<: *domain
-    url: "https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/reject.txt"
-
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-ads-all.mrs"
 
   # ==========================================================
   # AI
@@ -661,10 +657,9 @@ rule-providers:
     <<: *class
     url: "https://raw.githubusercontent.com/liandu2024/clash/refs/heads/main/list/Apple.list"
 
-  Loyalsoldier / iCloud:
+  iCloud / Domain:
     <<: *domain
-    url: "https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/icloud.txt"
-
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/icloud.mrs"
 
   # ==========================================================
   # Google
