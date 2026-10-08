@@ -340,24 +340,31 @@ proxy-groups:
 rules:
 
   # ==========================================================
-  # 1. 广告 / 拒绝
+  # 广告 / 拒绝
   # ==========================================================
 
   - RULE-SET,ads / Reject,REJECT
 
 
   # ==========================================================
-  # 2. LAN / 本地
+  # LAN / 本地
   # ==========================================================
 
   - GEOIP,LAN,DIRECT,no-resolve
 
+
   # Tailnet
   - IP-CIDR,100.64.0.0/10,DIRECT,no-resolve
 
+  # ==========================================================
+  # Private
+  # ==========================================================
+
+  - RULE-SET,Private / Domain,DIRECT
+  - RULE-SET,Private / IP,DIRECT,no-resolve
 
   # ==========================================================
-  # 3. Apple 基础设施
+  # Apple 基础设施
   # ==========================================================
 
   - DOMAIN,time.apple.com,DIRECT
@@ -368,7 +375,7 @@ rules:
 
 
   # ==========================================================
-  # 4. Tailscale (规则集 + 关键差异化前置)
+  # Tailscale (规则集 + 关键差异化前置)
   # ==========================================================
 
   # 官方海外 DERP 中继服务器：走代理节点转发
@@ -382,14 +389,7 @@ rules:
   - RULE-SET,Tailscale / Domain,DIRECT
 
   # ==========================================================
-  # 5. 网络检测
-  # ==========================================================
-
-  - RULE-SET,Test / Domain,测试
-
-
-  # ==========================================================
-  # 6. Media Scraper
+  # Media Scraper
   # ==========================================================
 
   # TMDB
@@ -430,7 +430,7 @@ rules:
 
 
   # ==========================================================
-  # 7. Apple
+  # Apple
   # ==========================================================
 
   # 中国大陆 Apple
@@ -444,14 +444,14 @@ rules:
 
 
   # ==========================================================
-  # 8. AI
+  # AI
   # ==========================================================
 
   - RULE-SET,AI / Domain,人工智能
 
 
   # ==========================================================
-  # 9. Google
+  # Google
   # ==========================================================
 
   - RULE-SET,Google / Domain,谷歌
@@ -459,21 +459,21 @@ rules:
 
 
   # ==========================================================
-  # 10. Microsoft
+  # Microsoft
   # ==========================================================
 
   - RULE-SET,Microsoft / Domain,微软
 
 
   # ==========================================================
-  # 11. YouTube
+  # YouTube
   # ==========================================================
 
   - RULE-SET,YouTube / Domain,YouTube
 
 
   # ==========================================================
-  # 12. Streaming
+  # Streaming
   # ==========================================================
 
   - RULE-SET,TikTok / Domain,流媒体
@@ -487,7 +487,7 @@ rules:
   - RULE-SET,Spotify / Domain,流媒体
 
   # ==========================================================
-  # 13. Games (海外游戏平台分流)
+  # Games (海外游戏平台分流)
   # ==========================================================
 
   # Steam 下载 CDN 强制直连（必须放在 Steam 代理规则之前）
@@ -501,11 +501,10 @@ rules:
   - RULE-SET,Nintendo / Domain,游戏
   - RULE-SET,PlayStation / Domain,游戏
   - RULE-SET,EA / Domain,游戏
-  - RULE-SET,Ubisoft / Domain,游戏
 
 
   # ==========================================================
-  # 14. Other Services
+  # Other Services
   # ==========================================================
 
   # Telegram
@@ -517,9 +516,6 @@ rules:
 
   # Crypto
   - RULE-SET,Crypto / Domain,加密货币
-  - RULE-SET,OKX / Domain,加密货币
-  - RULE-SET,Bybit / Domain,加密货币
-  - RULE-SET,Binance / Domain,加密货币
 
   # GitHub
   - RULE-SET,GitHub / Domain,国外
@@ -527,26 +523,8 @@ rules:
   # 成人内容
   - RULE-SET,Sex / Domain,颜色
 
-
   # ==========================================================
-  # 15. Private
-  # ==========================================================
-
-  - RULE-SET,Private / Domain,国内
-
-
-  # ==========================================================
-  # 16. 用户自定义规则
-  #
-  # Direct / Proxy 是你的人工覆盖层。
-  # ==========================================================
-
-  - RULE-SET,Direct / Domain,国内
-  - RULE-SET,Proxy / Domain,国外
-
-
-  # ==========================================================
-  # 17. 中国大陆 / 海外
+  # 中国大陆 / 海外
   # ==========================================================
 
   # 中国域名
@@ -563,7 +541,7 @@ rules:
 
 
   # ==========================================================
-  # 18. 最终兜底
+  # 最终兜底
   # ==========================================================
 
   - MATCH,漏网之鱼
@@ -617,15 +595,6 @@ rule-providers:
   AI / Domain:
     <<: *domain
     url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-ai-!cn.mrs"
-
-
-  # ==========================================================
-  # Network Test
-  # ==========================================================
-
-  Test / Domain:
-    <<: *class
-    url: "https://raw.githubusercontent.com/liandu2024/clash/refs/heads/main/list/Check.list"
 
 
   # ==========================================================
@@ -715,7 +684,6 @@ rule-providers:
   # ==========================================================
   # Games
   # ==========================================================
-  # 仅针对常见海外游戏平台（商店/社区/登录，由 MetaCubeX 维护）
   Steam / Domain:
     <<: *domain
     url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/steam.mrs"
@@ -736,29 +704,12 @@ rule-providers:
     <<: *domain
     url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/ea.mrs"
 
-  Ubisoft / Domain:
-    <<: *domain
-    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/ubisoft.mrs"
-
   # ==========================================================
-  # Crypto
+  # Crypto 加密货币分类
   # ==========================================================
-
   Crypto / Domain:
-    <<: *class
-    url: "https://gh-proxy.com/raw.githubusercontent.com/liandu2024/clash/refs/heads/main/list/Crypto.list"
-
-  OKX / Domain:
     <<: *domain
-    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/okx.mrs"
-
-  Bybit / Domain:
-    <<: *domain
-    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/bybit.mrs"
-
-  Binance / Domain:
-    <<: *domain
-    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/binance.mrs"
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-cryptocurrency.mrs"
 
 
   # ==========================================================
@@ -781,19 +732,6 @@ rule-providers:
   Nvidia / Domain:
     <<: *domain
     url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/nvidia.mrs"
-
-
-  # ==========================================================
-  # 用户自定义 Direct / Proxy
-  # ==========================================================
-
-  Direct / Domain:
-    <<: *class
-    url: "https://raw.githubusercontent.com/liandu2024/clash/refs/heads/main/list/Direct.list"
-
-  Proxy / Domain:
-    <<: *class
-    url: "https://raw.githubusercontent.com/liandu2024/clash/refs/heads/main/list/Proxy.list"
 
 
   # ==========================================================
@@ -825,6 +763,9 @@ rule-providers:
   Private / Domain:
     <<: *domain
     url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/private.mrs"
+  Private / IP:
+    <<: *ip
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/private.mrs"
 
 
   # ==========================================================
