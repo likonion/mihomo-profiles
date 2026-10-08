@@ -64,50 +64,40 @@ ruby_map_edit "$CONFIG_FILE" "['proxy-providers']" "airport" "['url']" "$EN_KEY1
 
 ## 1. 创建 OpenClash Overwrite 配置
 
-在 OpenWrt SSH 中执行：
++ 方式一： 在 OpenWrt SSH 中执行：
 
-```bash
-uci add openclash config_overwrite
-```
+  ```bash
+  uci add openclash config_overwrite
+  ```
 
-然后配置：
+  然后配置：
 
-```bash
-uci set openclash.@config_overwrite[-1].name='airport'
-uci set openclash.@config_overwrite[-1].enable='1'
-uci set openclash.@config_overwrite[-1].type='http'
-uci set openclash.@config_overwrite[-1].url='https://raw.githubusercontent.com/你的用户名/你的仓库/main/overwrite/airport'
-uci set openclash.@config_overwrite[-1].update_days='off'
-uci set openclash.@config_overwrite[-1].update_hour='off'
-uci set openclash.@config_overwrite[-1].order='100'
-uci add_list openclash.@config_overwrite[-1].config='all'
-```
+  ```bash
+  uci set openclash.@config_overwrite[-1].name='airport'
+  uci set openclash.@config_overwrite[-1].enable='1'
+  uci set openclash.@config_overwrite[-1].type='http'
+  uci set openclash.@config_overwrite[-1].url='https://raw.githubusercontent.com/你的用户名/你的仓库/main/overwrite/airport'
+  uci set openclash.@config_overwrite[-1].update_days='off'
+  uci set openclash.@config_overwrite[-1].update_hour='off'
+  uci set openclash.@config_overwrite[-1].order='100'
+  uci add_list openclash.@config_overwrite[-1].config='all'
+  uci set openclash.@config_overwrite[-1].param='EN_KEY1=你的真实机场订阅URL'
+  ```
++ 方式二：直接编辑 `vi /etc/config/openclash`
+  添加配置：
+  ```bash
+  config config_overwrite
+      option name 'airport'
+      option enable '1'
+      option type 'http'
+      option url 'https://raw.githubusercontent.com/你的用户名/你的仓库/main/overwrite/airport'
+      option update_days 'off'
+      option update_hour 'off'
+      option order '100'
+      list config 'all'
+      option param 'EN_KEY1=你的真实机场订阅URL'
+  ```
 
-## 2. 设置真实机场订阅地址
-
-将真实机场订阅地址写入 `EN_KEY1`：
-
-```bash
-uci set openclash.@config_overwrite[-1].param='EN_KEY1=你的真实机场订阅URL'
-```
-
-例如：
-
-```bash
-uci set openclash.@config_overwrite[-1].param='EN_KEY1=https://substore.example.com/xxxx/download/collection/airport?target=ClashMeta'
-```
-
-然后提交：
-
-```bash
-uci commit openclash
-```
-
-> **注意：**
->
-> `param` 中的真实订阅地址只保存在 OpenWrt 的 `/etc/config/openclash` 中，不要提交到 GitHub。
-
----
 
 # 三、确认 OpenClash 配置
 
@@ -300,63 +290,8 @@ airport
 
 三者统一后最不容易出错。
 
----
 
-# 八、迁移到另一台 OpenWrt
-
-如果以后需要重新配置，只需要完成以下步骤。
-
-### 1. 获取公开配置
-
-将 GitHub 上的：
-
-```text
-config.yaml
-overwrite/airport
-```
-
-配置到新的 OpenClash。
-
-### 2. 创建 Overwrite
-
-```bash
-uci add openclash config_overwrite
-uci set openclash.@config_overwrite[-1].name='airport'
-uci set openclash.@config_overwrite[-1].enable='1'
-uci set openclash.@config_overwrite[-1].type='http'
-uci set openclash.@config_overwrite[-1].url='https://raw.githubusercontent.com/你的用户名/你的仓库/main/overwrite/airport'
-uci set openclash.@config_overwrite[-1].update_days='off'
-uci set openclash.@config_overwrite[-1].update_hour='off'
-uci set openclash.@config_overwrite[-1].order='100'
-uci add_list openclash.@config_overwrite[-1].config='all'
-```
-
-### 3. 设置本机私有订阅地址
-
-```bash
-uci set openclash.@config_overwrite[-1].param='EN_KEY1=你的真实机场订阅URL'
-uci commit openclash
-```
-
-### 4. 下载 Overwrite 文件
-
-```bash
-mkdir -p /etc/openclash/overwrite
-
-curl -L \
-'https://raw.githubusercontent.com/你的用户名/你的仓库/main/overwrite/airport' \
--o /etc/openclash/overwrite/airport
-```
-
-### 5. 重启
-
-```bash
-/etc/init.d/openclash restart
-```
-
----
-
-# 九、安全注意事项
+# 八、安全注意事项
 
 不要将真实机场订阅 URL 写入：
 
@@ -384,7 +319,7 @@ option param 'EN_KEY1=真实机场订阅URL'
 
 ---
 
-# 十、最终效果
+# 九、最终效果
 
 最终实现：
 
@@ -422,4 +357,4 @@ option param 'EN_KEY1=真实机场订阅URL'
 * 不需要额外 Docker
 * 不需要修改机场订阅内容
 * 不影响现有 `proxy-groups` 对 `airport` Provider 的引用
-# mihomo-profiles
+
