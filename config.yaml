@@ -77,7 +77,7 @@ dns:
   # ==========================================================
   nameserver-policy:
     # 中国大陆 / Private / Apple
-    "geosite:cn,private,apple":
+    "geosite:cn,private,apple-cn":
       - 218.85.152.99
       - 218.85.157.99
     "geosite:category-ads-all": rcode://success # DNS 层面的广告域名拦截  
